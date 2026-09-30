@@ -4,9 +4,9 @@
 
 	const source = `
     200g of tuna macaroni cheese sandwich @breakfast
-    100g of tuna (raw, oilfree) @lunch
-    50g of tuna @dinner
-    100g of kale
+    100g of tuna (raw, oil-free) @lunch one
+    50.5g of tuna @dinner
+    100 of kale
 `;
 	const tokenizer = new Tokenizer(source);
 	const parser = new Parser(tokenizer.tokenize());

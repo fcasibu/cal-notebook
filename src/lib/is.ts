@@ -7,10 +7,16 @@ export function isDigit(char: string) {
 }
 
 export function isLetter(char: string) {
-	return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+	return (
+		(char >= 'a' && char <= 'z') ||
+		(char >= 'A' && char <= 'Z') ||
+		char === '_' ||
+		char === '-' ||
+		char === "'"
+	);
 }
 
-const UNITS = new Set(['g', 'kg']);
+export const UNITS = new Set(['g', 'kg', 'ml', 'l', 'oz', 'lb', 'tsp', 'tbsp', 'cup', 'scoop']);
 
 export function isUnit(content: string) {
 	return UNITS.has(content);

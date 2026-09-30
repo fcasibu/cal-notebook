@@ -31,8 +31,6 @@ export class Tokenizer {
 	}
 
 	public tokenize(): Token[] {
-		if (!this.source) return [];
-
 		while (!this.eof()) {
 			this.skipWhitespace();
 			this.scan();
@@ -63,7 +61,7 @@ export class Tokenizer {
 			case '@':
 				this.tokens.push(this.makeToken(TokenKind.AT, '@'));
 				break;
-			case '\0':
+			case undefined:
 				this.tokens.push(this.makeToken(TokenKind.EOF, ''));
 				break;
 
@@ -72,6 +70,8 @@ export class Tokenizer {
 					this.tokens.push(this.parseNumber());
 				} else if (isLetter(ch)) {
 					this.tokens.push(this.parseLetter());
+				} else {
+					throw new Error(`Unexpected character '${ch}'`);
 				}
 
 				return;
@@ -83,20 +83,41 @@ export class Tokenizer {
 
 	private parseLetter(): Token {
 		const start = this.cursor;
+		const startLine = this.line;
+		const startCol = this.col;
+
 		while (isLetter(this.currentChar)) this.consume();
 
-		return this.makeToken(TokenKind.IDENTIFIER, this.source.slice(start, this.cursor));
+		return this.makeToken(
+			TokenKind.IDENTIFIER,
+			this.source.slice(start, this.cursor),
+			startLine,
+			startCol
+		);
 	}
 
 	private parseNumber(): Token {
 		const start = this.cursor;
-		while (isDigit(this.currentChar)) this.consume();
+		const startLine = this.line;
+		const startCol = this.col;
 
-		return this.makeToken(TokenKind.NUMBER, this.source.slice(start, this.cursor));
+		while (isDigit(this.currentChar)) {
+			this.consume();
+
+			if (this.currentChar === '.') this.consume();
+		}
+
+		return this.makeToken(
+			TokenKind.NUMBER,
+			this.source.slice(start, this.cursor),
+			startLine,
+			startCol
+		);
 	}
 
 	private consume() {
 		this.col = this.currentChar === '\n' ? 1 : this.col + 1;
+		this.line = this.currentChar === '\n' ? this.line + 1 : this.line;
 		this.cursor += 1;
 
 		const char = this.source[this.cursor];
@@ -111,10 +132,15 @@ export class Tokenizer {
 		return this.cursor >= this.source.length;
 	}
 
-	private makeToken(kind: TokenKind, value: string): Token {
+	private makeToken(
+		kind: TokenKind,
+		value: string,
+		line: number = this.line,
+		col: number = this.col
+	): Token {
 		return {
-			line: this.line,
-			col: this.col,
+			line,
+			col,
 			kind,
 			value
 		};
