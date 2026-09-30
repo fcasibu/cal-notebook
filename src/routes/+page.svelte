@@ -3,10 +3,8 @@
 	import { Tokenizer } from '$lib/tokenizer';
 
 	const source = `
-    200g of tuna macaroni cheese sandwich @breakfast
-    100g of tuna (raw, oil-free) @lunch one
-    50.5g of tuna @dinner
-    100 of kale
+##### Hello this is a comment
+    200g of tuna () @lunch one _test-
 `;
 	const tokenizer = new Tokenizer(source);
 	const parser = new Parser(tokenizer.tokenize());

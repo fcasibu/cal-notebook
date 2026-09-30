@@ -8,6 +8,7 @@ export enum TokenKind {
 	COMMA,
 	IDENTIFIER,
 	NUMBER,
+	COMMENT,
 	AT,
 	EOF
 }
@@ -17,6 +18,19 @@ export interface Token {
 	col: number;
 	value: string;
 	kind: TokenKind;
+}
+
+export class LexError extends Error {
+	constructor(
+		public readonly msg: string,
+		public readonly line: number,
+		public readonly col: number
+	) {
+		super(msg);
+		this.name = 'LexError';
+
+		if (Error.captureStackTrace) Error.captureStackTrace(this, LexError);
+	}
 }
 
 export class Tokenizer {
@@ -61,6 +75,9 @@ export class Tokenizer {
 			case '@':
 				this.tokens.push(this.makeToken(TokenKind.AT, '@'));
 				break;
+			case '#':
+				this.tokens.push(this.parseComment());
+				break;
 			case undefined:
 				this.tokens.push(this.makeToken(TokenKind.EOF, ''));
 				break;
@@ -71,7 +88,7 @@ export class Tokenizer {
 				} else if (isLetter(ch)) {
 					this.tokens.push(this.parseLetter());
 				} else {
-					throw new Error(`Unexpected character '${ch}'`);
+					throw new LexError(`Unexpected character '${ch}'`, this.line, this.col);
 				}
 
 				return;
@@ -91,6 +108,32 @@ export class Tokenizer {
 		return this.makeToken(
 			TokenKind.IDENTIFIER,
 			this.source.slice(start, this.cursor),
+			startLine,
+			startCol
+		);
+	}
+
+	private parseComment(): Token {
+		const start = this.cursor;
+		const startLine = this.line;
+		const startCol = this.col;
+
+		let startIdent: number | null = null;
+		while (
+			this.currentChar !== '\n' &&
+			this.currentChar !== '\r' &&
+			this.currentChar !== undefined
+		) {
+			if (isLetter(this.currentChar) && startIdent === null) {
+				startIdent = this.cursor;
+			}
+
+			this.consume();
+		}
+
+		return this.makeToken(
+			TokenKind.COMMENT,
+			this.source.slice(startIdent ?? start, this.cursor),
 			startLine,
 			startCol
 		);

@@ -1,12 +1,12 @@
-import { isUnit, UNITS } from './is';
 import { TokenKind, type Token } from './tokenizer';
+import { isUnit, UNITS } from './unit';
 
 export interface ProgramNode extends NodeBase {
 	type: 'Program';
 	body: StatementNode[];
 }
 
-export type StatementNode = EntryStatementNode;
+export type StatementNode = EntryStatementNode | CommentNode;
 
 export interface EntryStatementNode extends NodeBase {
 	type: 'EntryStatement';
@@ -14,6 +14,11 @@ export interface EntryStatementNode extends NodeBase {
 	quantity: QuantityNode;
 	food: FoodNode;
 	modifiers: ModifierNode[];
+}
+
+export interface CommentNode extends NodeBase {
+	type: 'Comment';
+	text: string;
 }
 
 export interface QuantityNode extends NodeBase {
@@ -29,7 +34,8 @@ export interface UnitNode extends NodeBase {
 
 export interface FoodNode extends NodeBase {
 	type: 'Food';
-	name: string;
+	raw: string;
+	normalized: string;
 }
 
 export interface ModifierNode extends NodeBase {
@@ -80,13 +86,27 @@ export class Parser {
 	private parseStatements(): StatementNode[] {
 		const statements: StatementNode[] = [];
 
-		while (!this.isEOF()) statements.push(this.parseEntryStatement());
+		while (!this.isEOF()) {
+			if (this.current()!.kind === TokenKind.COMMENT) {
+				const commentToken = this.advance();
+
+				statements.push({
+					type: 'Comment',
+					text: commentToken.value,
+					line: commentToken.line,
+					col: commentToken.col
+				});
+				continue;
+			}
+
+			statements.push(this.parseEntryStatement());
+		}
 
 		return statements;
 	}
 
 	private parseEntryStatement(): EntryStatementNode {
-		const startToken = this.tokens[this.currentIndex]!;
+		const startToken = this.current()!;
 
 		const quantity = this.parseQuantity();
 		const food = this.parseFood();
@@ -138,10 +158,6 @@ export class Parser {
 	private parseQuantity(): QuantityNode {
 		const token = this.advance();
 
-		if (token.kind !== TokenKind.NUMBER) {
-			throw new ParseError(`Expected number, got "${token.value}"`, token.line, token.col);
-		}
-
 		const value = parseFloat(token.value);
 		const unit = this.parseUnit();
 
@@ -165,7 +181,7 @@ export class Parser {
 		if (token.value === 'of') return null;
 
 		if (!isUnit(token.value)) {
-			const units = Array.from(UNITS).join(', ');
+			const units = Array.from(UNITS.values()).join(', ');
 			throw new ParseError(
 				`Expected unit, got "${token.value}". Expected one of [${units}]`,
 				token.line,
@@ -194,20 +210,25 @@ export class Parser {
 				break;
 			}
 
-			words.push(token.value.toLowerCase().trim());
+			words.push(token.value);
 		}
 
-		if (!words.length) {
+		if (!words.length)
 			throw new ParseError(
 				`Expected food, got "${words.join(' ')}"`,
 				startToken.line,
 				startToken.col
 			);
-		}
+
+		const normalized = words.join(' ').toLowerCase().trim();
+
+		if (normalized.length < 2)
+			throw new ParseError(`Expected food, got "${normalized}"`, startToken.line, startToken.col);
 
 		return {
 			type: 'Food',
-			name: words.join(' '),
+			raw: words.join(' '),
+			normalized,
 			line: startToken.line,
 			col: startToken.col
 		};
@@ -251,7 +272,7 @@ export class Parser {
 
 			modifiers.push({
 				type: 'Modifier',
-				raw: value,
+				raw: value.toLowerCase().trim(),
 				line: token.line,
 				col: token.col
 			});

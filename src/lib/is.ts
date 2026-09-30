@@ -15,9 +15,3 @@ export function isLetter(char: string) {
 		char === "'"
 	);
 }
-
-export const UNITS = new Set(['g', 'kg', 'ml', 'l', 'oz', 'lb', 'tsp', 'tbsp', 'cup', 'scoop']);
-
-export function isUnit(content: string) {
-	return UNITS.has(content);
-}
