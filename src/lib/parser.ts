@@ -186,7 +186,7 @@ export class Parser {
 		if (token.value === 'of') return null;
 
 		if (!isUnit(token.value)) {
-			const units = Array.from(UNITS.values()).join(', ');
+			const units = Array.from(UNITS.keys()).join(', ');
 			throw new ParseError(
 				`Expected unit, got "${token.value}". Expected one of [${units}]`,
 				token.line,
