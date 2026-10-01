@@ -3,11 +3,8 @@
 	import { Tokenizer } from '$lib/tokenizer';
 
 	const source = `
-##### Hello this is a comment
-    200KG of tuna () @lunch one _test-
-    1       1/2 cup of cheese @dinner
-    1/2 cup of cheese
-    50.5 cup of Cheese VITAMIN D3 gummies
+150 g chicken
+200g rice (lo, oil-free)
 `;
 	const tokenizer = new Tokenizer(source);
 	const parser = new Parser(tokenizer.tokenize());

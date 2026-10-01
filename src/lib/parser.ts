@@ -80,14 +80,15 @@ export class Parser {
 		};
 	}
 
-	private isEOF(): boolean {
-		return this.currentIndex >= this.tokens.length || this.current().kind === TokenKind.EOF;
-	}
-
 	private parseStatements(): StatementNode[] {
 		const statements: StatementNode[] = [];
 
 		while (!this.isEOF()) {
+			if (this.isNewline()) {
+				this.advance();
+				continue;
+			}
+
 			if (this.current()!.kind === TokenKind.COMMENT) {
 				const commentToken = this.advance();
 
@@ -141,7 +142,7 @@ export class Parser {
 			return null;
 		}
 
-		const tag = this.tokens[this.currentIndex++];
+		const tag = this.advance();
 
 		if (tag.kind !== TokenKind.IDENTIFIER) {
 			throw new ParseError(`Expected tag, got "${tag.value}"`, tag.line, tag.col);
@@ -158,6 +159,9 @@ export class Parser {
 
 	private parseQuantity(): QuantityNode {
 		const token = this.advance();
+
+		if (token.kind !== TokenKind.NUMBER)
+			throw new ParseError(`Expected quantity, got "${token.value}"`, token.line, token.col);
 
 		const value = parseRawNumber(token.value);
 		const unit = this.parseUnit();
@@ -246,7 +250,7 @@ export class Parser {
 
 		const modifiers: ModifierNode[] = [];
 
-		while (!this.isEOF()) {
+		while (!this.isEOF() && !this.isNewline()) {
 			const modifier = this.advance();
 
 			if (modifier.kind === TokenKind.RPAREN) {
@@ -280,8 +284,8 @@ export class Parser {
 		}
 
 		const lastToken = this.tokens[this.currentIndex - 1];
-		if (lastToken.kind !== TokenKind.RPAREN) {
-			throw new ParseError(`Expected ), got "${lastToken.value}"`, lastToken.line, lastToken.col);
+		if (lastToken.kind !== TokenKind.RPAREN && this.isNewline()) {
+			throw new ParseError('Expected ")"', lastToken.line, lastToken.col);
 		}
 
 		return modifiers;
@@ -297,5 +301,13 @@ export class Parser {
 			throw new Error('Unexpected undefined token');
 		}
 		return token;
+	}
+
+	private isEOF(): boolean {
+		return this.currentIndex >= this.tokens.length || this.current().kind === TokenKind.EOF;
+	}
+
+	private isNewline(): boolean {
+		return this.current().kind === TokenKind.NEWLINE;
 	}
 }

@@ -8,6 +8,7 @@ export enum TokenKind {
 	NUMBER,
 	COMMENT,
 	AT,
+	NEWLINE,
 	EOF
 }
 
@@ -71,6 +72,9 @@ export class Tokenizer {
 				break;
 			case '#':
 				this.tokens.push(this.parseComment());
+				break;
+			case '\n':
+				this.tokens.push(this.makeToken(TokenKind.NEWLINE, '\n'));
 				break;
 			case undefined:
 				this.tokens.push(this.makeToken(TokenKind.EOF, ''));
