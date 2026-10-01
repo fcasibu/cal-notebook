@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { ParseError } from './error';
 import { TokenKind, type Token } from './tokenizer';
 import { isUnit } from './unit';
@@ -213,7 +214,6 @@ export class Parser {
 
 			words.push(token.value);
 		}
-		console.log(startToken, words);
 
 		if (!words.length)
 			throw new ParseError(
@@ -289,14 +289,14 @@ export class Parser {
 	}
 
 	private current(): Token {
-		return this.tokens[this.currentIndex];
+		const token = this.tokens[this.currentIndex];
+		assert(token !== undefined);
+		return token;
 	}
 
 	private advance(): Token {
 		const token = this.tokens[this.currentIndex++];
-		if (!token) {
-			throw new Error('Unexpected undefined token');
-		}
+		assert(token !== undefined);
 		return token;
 	}
 
