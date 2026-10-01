@@ -1,3 +1,4 @@
+import { LexError } from './error';
 import { isDigit, isLetter, isNameChar, isWhitespace } from './is';
 
 export enum TokenKind {
@@ -17,19 +18,6 @@ export interface Token {
 	col: number;
 	value: string;
 	kind: TokenKind;
-}
-
-export class LexError extends Error {
-	constructor(
-		public readonly msg: string,
-		public readonly line: number,
-		public readonly col: number
-	) {
-		super(msg);
-		this.name = 'LexError';
-
-		if (Error.captureStackTrace) Error.captureStackTrace(this, LexError);
-	}
 }
 
 export class Tokenizer {
@@ -76,12 +64,19 @@ export class Tokenizer {
 			case '\n':
 				this.tokens.push(this.makeToken(TokenKind.NEWLINE, '\n'));
 				break;
+			case undefined:
+				break;
 
 			default: {
 				if (isDigit(ch) || ch === '.') {
-					this.tokens.push(this.parseNumber());
+					if (isLetter(this.peek())) {
+						this.consume();
+						this.tokens.push(this.parseIdent());
+					} else {
+						this.tokens.push(this.parseNumber());
+					}
 				} else if (isLetter(ch)) {
-					this.tokens.push(this.parseLetter());
+					this.tokens.push(this.parseIdent());
 				} else {
 					throw new LexError(`Unexpected character '${ch}'`, this.line, this.col);
 				}
@@ -93,7 +88,7 @@ export class Tokenizer {
 		this.consume();
 	}
 
-	private parseLetter(): Token {
+	private parseIdent(): Token {
 		const start = this.cursor;
 		const startLine = this.line;
 		const startCol = this.col;
@@ -116,22 +111,12 @@ export class Tokenizer {
 		const startLine = this.line;
 		const startCol = this.col;
 
-		let startIdent: number | null = null;
-		while (
-			this.currentChar !== '\n' &&
-			this.currentChar !== '\r' &&
-			this.currentChar !== undefined
-		) {
-			if (isLetter(this.currentChar) && startIdent === null) {
-				startIdent = this.cursor;
-			}
-
+		while (this.currentChar !== '\n' && this.currentChar !== '\r' && this.currentChar !== undefined)
 			this.consume();
-		}
 
 		return this.makeToken(
 			TokenKind.COMMENT,
-			this.source.slice(startIdent ?? start, this.cursor),
+			this.source.slice(start, this.cursor),
 			startLine,
 			startCol
 		);
@@ -187,6 +172,10 @@ export class Tokenizer {
 
 		const char = this.source[this.cursor];
 		this.currentChar = char;
+	}
+
+	private peek() {
+		return this.source[this.cursor + 1];
 	}
 
 	private skipWhitespace() {

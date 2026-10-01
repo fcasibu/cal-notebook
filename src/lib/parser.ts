@@ -1,5 +1,6 @@
+import { ParseError } from './error';
 import { TokenKind, type Token } from './tokenizer';
-import { isUnit, UNITS } from './unit';
+import { isUnit } from './unit';
 import { parseRawNumber } from './value';
 
 export interface ProgramNode extends NodeBase {
@@ -47,21 +48,6 @@ export interface ModifierNode extends NodeBase {
 export interface NodeBase {
 	line: number;
 	col: number;
-}
-
-export class ParseError extends Error {
-	constructor(
-		public readonly msg: string,
-		public readonly line: number,
-		public readonly col: number
-	) {
-		super(msg);
-		this.name = 'ParseError';
-
-		if (Error.captureStackTrace) {
-			Error.captureStackTrace(this, ParseError);
-		}
-	}
 }
 
 export class Parser {
@@ -185,18 +171,28 @@ export class Parser {
 
 		if (token.value === 'of') return null;
 
-		if (!isUnit(token.value)) {
-			const units = Array.from(UNITS.keys()).join(', ');
-			throw new ParseError(
-				`Expected unit, got "${token.value}". Expected one of [${units}]`,
-				token.line,
-				token.col
-			);
+		let value = token.value;
+		while (this.current().kind === TokenKind.IDENTIFIER) {
+			const token = this.advance();
+
+			const prevValue = value;
+			value += ` ${token.value}`;
+
+			if (!isUnit(value)) {
+				this.currentIndex--;
+				value = prevValue;
+				break;
+			}
+		}
+
+		if (!isUnit(value)) {
+			this.currentIndex--;
+			return null;
 		}
 
 		return {
 			type: 'Unit',
-			raw: token.value,
+			raw: value,
 			line: token.line,
 			col: token.col
 		};
@@ -217,6 +213,7 @@ export class Parser {
 
 			words.push(token.value);
 		}
+		console.log(startToken, words);
 
 		if (!words.length)
 			throw new ParseError(
