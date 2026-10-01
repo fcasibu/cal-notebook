@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert, { AssertionError } from 'assert';
 import { ParseError, ParseNumberError, type ProgramError } from './error';
 import { TokenKind, type Token } from './tokenizer';
 import { isUnit } from './unit';
@@ -93,6 +93,8 @@ export class Parser {
 			try {
 				statements.push(this.parseEntryStatement());
 			} catch (error) {
+				if (error instanceof AssertionError) throw error;
+
 				this.synchronize();
 				errors.push(error as ProgramError);
 			}
