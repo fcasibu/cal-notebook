@@ -3,7 +3,7 @@ export function isWhitespace(char: string) {
 }
 
 export function isDigit(char: string) {
-	return (char >= '0' && char <= '9') || char === '.';
+	return char >= '0' && char <= '9';
 }
 
 export function isLetter(char: string) {
@@ -14,4 +14,8 @@ export function isLetter(char: string) {
 		char === '-' ||
 		char === "'"
 	);
+}
+
+export function isNameChar(char: string) {
+	return isLetter(char) || isDigit(char) || char === '-' || char === "'";
 }

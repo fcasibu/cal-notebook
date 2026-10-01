@@ -78,7 +78,7 @@ export class Tokenizer {
 				break;
 
 			default: {
-				if (isDigit(ch)) {
+				if (isDigit(ch) || ch === '.') {
 					this.tokens.push(this.parseNumber());
 				} else if (isLetter(ch)) {
 					this.tokens.push(this.parseLetter());
