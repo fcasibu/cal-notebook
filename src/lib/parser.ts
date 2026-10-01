@@ -1,5 +1,6 @@
 import { TokenKind, type Token } from './tokenizer';
 import { isUnit, UNITS } from './unit';
+import { parseRawNumber } from './value';
 
 export interface ProgramNode extends NodeBase {
 	type: 'Program';
@@ -158,7 +159,7 @@ export class Parser {
 	private parseQuantity(): QuantityNode {
 		const token = this.advance();
 
-		const value = parseFloat(token.value);
+		const value = parseRawNumber(token.value);
 		const unit = this.parseUnit();
 
 		return {

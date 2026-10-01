@@ -3,8 +3,6 @@ import { isDigit, isLetter, isWhitespace } from './is';
 export enum TokenKind {
 	LPAREN,
 	RPAREN,
-	LBRACKET,
-	RBRACKET,
 	COMMA,
 	IDENTIFIER,
 	NUMBER,
@@ -50,6 +48,8 @@ export class Tokenizer {
 			this.scan();
 		}
 
+		if (!this.tokens.length) this.tokens.push(this.makeToken(TokenKind.EOF, ''));
+
 		return this.tokens;
 	}
 
@@ -62,12 +62,6 @@ export class Tokenizer {
 				break;
 			case ')':
 				this.tokens.push(this.makeToken(TokenKind.RPAREN, ')'));
-				break;
-			case '[':
-				this.tokens.push(this.makeToken(TokenKind.LBRACKET, '['));
-				break;
-			case ']':
-				this.tokens.push(this.makeToken(TokenKind.RBRACKET, ']'));
 				break;
 			case ',':
 				this.tokens.push(this.makeToken(TokenKind.COMMA, ','));
@@ -103,7 +97,10 @@ export class Tokenizer {
 		const startLine = this.line;
 		const startCol = this.col;
 
-		while (isLetter(this.currentChar)) this.consume();
+		while (isLetter(this.currentChar)) {
+			this.consume();
+			while (isDigit(this.currentChar)) this.consume();
+		}
 
 		return this.makeToken(
 			TokenKind.IDENTIFIER,
@@ -144,10 +141,34 @@ export class Tokenizer {
 		const startLine = this.line;
 		const startCol = this.col;
 
+		let hasDot = false;
+		let hasSlash = false;
+
 		while (isDigit(this.currentChar)) {
 			this.consume();
 
-			if (this.currentChar === '.') this.consume();
+			if (hasDot && this.currentChar === '.')
+				throw new LexError(`Unexpected character '${this.currentChar}'`, this.line, this.col);
+
+			if (hasSlash && this.currentChar === '/')
+				throw new LexError(`Unexpected character '${this.currentChar}'`, this.line, this.col);
+
+			if (isWhitespace(this.currentChar)) {
+				this.skipWhitespace();
+				continue;
+			}
+
+			if (this.currentChar === '.') {
+				hasDot = true;
+				this.consume();
+				continue;
+			}
+
+			if (this.currentChar === '/') {
+				hasSlash = true;
+				this.consume();
+				continue;
+			}
 		}
 
 		return this.makeToken(
