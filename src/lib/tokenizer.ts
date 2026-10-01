@@ -42,7 +42,7 @@ export class Tokenizer {
 		return this.tokens;
 	}
 
-	private scan() {
+	private scan(): void {
 		const ch = this.currentChar;
 
 		switch (ch) {
@@ -161,7 +161,7 @@ export class Tokenizer {
 		);
 	}
 
-	private consume() {
+	private consume(): void {
 		this.col = this.currentChar === '\n' ? 1 : this.col + 1;
 		this.line = this.currentChar === '\n' ? this.line + 1 : this.line;
 		this.cursor += 1;
@@ -170,15 +170,15 @@ export class Tokenizer {
 		this.currentChar = char;
 	}
 
-	private peek() {
+	private peek(): string {
 		return this.source[this.cursor + 1];
 	}
 
-	private skipWhitespace() {
+	private skipWhitespace(): void {
 		while (isWhitespace(this.currentChar)) this.consume();
 	}
 
-	private eof() {
+	private eof(): boolean {
 		return this.cursor >= this.source.length;
 	}
 

@@ -1,12 +1,12 @@
-export function isWhitespace(char: string) {
+export function isWhitespace(char: string): boolean {
 	return char === ' ' || char === '\t' || char === '\r';
 }
 
-export function isDigit(char: string) {
+export function isDigit(char: string): boolean {
 	return char >= '0' && char <= '9';
 }
 
-export function isLetter(char: string) {
+export function isLetter(char: string): boolean {
 	return (
 		(char >= 'a' && char <= 'z') ||
 		(char >= 'A' && char <= 'Z') ||
@@ -16,6 +16,6 @@ export function isLetter(char: string) {
 	);
 }
 
-export function isNameChar(char: string) {
+export function isNameChar(char: string): boolean {
 	return isLetter(char) || isDigit(char) || char === '-' || char === "'";
 }
