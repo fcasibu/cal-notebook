@@ -27,7 +27,11 @@ export class ParseError extends Error {
 }
 
 export class ParseNumberError extends Error {
-	constructor(public readonly msg: string) {
+	constructor(
+		public readonly msg: string,
+		public line: number = 0,
+		public col: number = 0
+	) {
 		super(msg);
 		this.name = 'ParseNumberError';
 
@@ -36,3 +40,5 @@ export class ParseNumberError extends Error {
 		}
 	}
 }
+
+export type ProgramError = LexError | ParseError | ParseNumberError | Error;

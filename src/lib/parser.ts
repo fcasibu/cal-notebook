@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { ParseError } from './error';
+import { ParseError, ParseNumberError, type ProgramError } from './error';
 import { TokenKind, type Token } from './tokenizer';
 import { isUnit } from './unit';
 import { parseRawNumber } from './value';
@@ -57,7 +57,8 @@ export class Parser {
 	constructor(private readonly tokens: Token[]) {}
 
 	public parse(): ProgramNode {
-		const statements = this.parseStatements();
+		const { statements, errors } = this.parseStatements();
+		console.log(errors);
 
 		return {
 			type: 'Program',
@@ -67,8 +68,9 @@ export class Parser {
 		};
 	}
 
-	private parseStatements(): StatementNode[] {
+	private parseStatements(): { statements: StatementNode[]; errors: ProgramError[] } {
 		const statements: StatementNode[] = [];
+		const errors: ProgramError[] = [];
 
 		while (!this.isEOF()) {
 			if (this.isNewline()) {
@@ -88,10 +90,15 @@ export class Parser {
 				continue;
 			}
 
-			statements.push(this.parseEntryStatement());
+			try {
+				statements.push(this.parseEntryStatement());
+			} catch (error) {
+				this.synchronize();
+				errors.push(error as ProgramError);
+			}
 		}
 
-		return statements;
+		return { statements, errors };
 	}
 
 	private parseEntryStatement(): EntryStatementNode {
@@ -150,7 +157,18 @@ export class Parser {
 		if (token.kind !== TokenKind.NUMBER)
 			throw new ParseError(`Expected quantity, got "${token.value}"`, token.line, token.col);
 
-		const value = parseRawNumber(token.value);
+		let value: number;
+		try {
+			value = parseRawNumber(token.value);
+		} catch (error) {
+			if (error instanceof ParseNumberError) {
+				error.line = token.line;
+				error.col = token.col;
+				throw error;
+			} else {
+				throw error;
+			}
+		}
 		const unit = this.parseUnit();
 
 		return {
@@ -303,5 +321,13 @@ export class Parser {
 
 	private isNewline(): boolean {
 		return this.current().kind === TokenKind.NEWLINE;
+	}
+
+	private synchronize(): void {
+		while (!this.isEOF()) {
+			if (this.current().kind == TokenKind.NEWLINE) return;
+
+			this.advance();
+		}
 	}
 }
