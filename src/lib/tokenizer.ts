@@ -70,7 +70,6 @@ export class Tokenizer {
 			default: {
 				if (isDigit(ch) || ch === '.') {
 					if (isLetter(this.peek())) {
-						this.consume();
 						this.tokens.push(this.parseIdent());
 					} else {
 						this.tokens.push(this.parseNumber());
@@ -93,10 +92,7 @@ export class Tokenizer {
 		const startLine = this.line;
 		const startCol = this.col;
 
-		while (isLetter(this.currentChar)) {
-			this.consume();
-			while (isNameChar(this.currentChar)) this.consume();
-		}
+		while (isNameChar(this.currentChar)) this.consume();
 
 		return this.makeToken(
 			TokenKind.IDENTIFIER,
