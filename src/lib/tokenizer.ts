@@ -1,4 +1,4 @@
-import { isDigit, isLetter, isWhitespace } from './is';
+import { isDigit, isLetter, isNameChar, isWhitespace } from './is';
 
 export enum TokenKind {
 	LPAREN,
@@ -49,7 +49,7 @@ export class Tokenizer {
 			this.scan();
 		}
 
-		if (!this.tokens.length) this.tokens.push(this.makeToken(TokenKind.EOF, ''));
+		this.tokens.push(this.makeToken(TokenKind.EOF, ''));
 
 		return this.tokens;
 	}
@@ -76,9 +76,6 @@ export class Tokenizer {
 			case '\n':
 				this.tokens.push(this.makeToken(TokenKind.NEWLINE, '\n'));
 				break;
-			case undefined:
-				this.tokens.push(this.makeToken(TokenKind.EOF, ''));
-				break;
 
 			default: {
 				if (isDigit(ch)) {
@@ -103,7 +100,7 @@ export class Tokenizer {
 
 		while (isLetter(this.currentChar)) {
 			this.consume();
-			while (isDigit(this.currentChar)) this.consume();
+			while (isNameChar(this.currentChar)) this.consume();
 		}
 
 		return this.makeToken(
@@ -148,7 +145,7 @@ export class Tokenizer {
 		let hasDot = false;
 		let hasSlash = false;
 
-		while (isDigit(this.currentChar)) {
+		while (isDigit(this.currentChar) || this.currentChar === '.') {
 			this.consume();
 
 			if (hasDot && this.currentChar === '.')
