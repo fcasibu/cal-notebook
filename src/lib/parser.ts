@@ -250,21 +250,16 @@ export class Parser {
 		while (!this.isEOF() && !this.isNewline()) {
 			const modifier = this.advance();
 
-			if (modifier.kind === TokenKind.RPAREN) {
-				break;
-			}
+			if (modifier.kind === TokenKind.RPAREN) break;
 
-			if (modifier.kind === TokenKind.COMMA) {
-				continue;
-			}
+			if (modifier.kind === TokenKind.COMMA) continue;
 
-			if (modifier.kind !== TokenKind.IDENTIFIER) {
+			if (modifier.kind !== TokenKind.IDENTIFIER)
 				throw new ParseError(
 					`Expected modifier, got "${modifier.value}"`,
 					modifier.line,
 					modifier.col
 				);
-			}
 
 			let value = modifier.value;
 			while (this.current().kind === TokenKind.IDENTIFIER) {
@@ -275,15 +270,17 @@ export class Parser {
 			modifiers.push({
 				type: 'Modifier',
 				raw: value.toLowerCase().trim(),
-				line: token.line,
-				col: token.col
+				line: modifier.line,
+				col: modifier.col
 			});
 		}
 
 		const lastToken = this.tokens[this.currentIndex - 1];
-		if (lastToken.kind !== TokenKind.RPAREN && this.isNewline()) {
+		if (lastToken.kind !== TokenKind.RPAREN && this.isNewline())
 			throw new ParseError('Expected ")"', lastToken.line, lastToken.col);
-		}
+
+		if (!modifiers.length)
+			throw new ParseError('Expected modifier got "()"', token.line, token.col);
 
 		return modifiers;
 	}
