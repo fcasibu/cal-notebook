@@ -1,4 +1,4 @@
-import { LexError } from './error';
+import { LexError } from '../errors';
 import { isDigit, isLetter, isNameChar, isWhitespace } from './is';
 
 export enum TokenKind {
@@ -46,6 +46,9 @@ export class Tokenizer {
 		const ch = this.currentChar;
 
 		switch (ch) {
+			case undefined:
+				return;
+
 			case '(':
 				this.tokens.push(this.makeToken(TokenKind.LPAREN, '('));
 				break;
@@ -63,8 +66,6 @@ export class Tokenizer {
 				break;
 			case '\n':
 				this.tokens.push(this.makeToken(TokenKind.NEWLINE, '\n'));
-				break;
-			case undefined:
 				break;
 
 			default: {

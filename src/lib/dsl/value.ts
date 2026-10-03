@@ -1,4 +1,4 @@
-import { ParseNumberError } from './error';
+import { ParseNumberError } from '../errors';
 
 const PATTERN = /^\s*([+-])?\s*(?:(\d+)\s+(\d+)\/(\d+)|(\d+)\/(\d+)|(\d+(?:\.\d+)?|\.\d+))\s*$/;
 

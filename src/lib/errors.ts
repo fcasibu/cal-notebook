@@ -42,3 +42,10 @@ export class ParseNumberError extends Error {
 }
 
 export type ProgramError = LexError | ParseError | ParseNumberError | Error;
+
+export class USDALimitExceededError extends Error {
+	constructor(public readonly msg: string) {
+		super(msg);
+		this.name = 'RateLimitError';
+	}
+}

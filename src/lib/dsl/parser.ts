@@ -1,7 +1,7 @@
 import assert, { AssertionError } from 'assert';
-import { ParseError, ParseNumberError, type ProgramError } from './error';
+import { ParseError, ParseNumberError, type ProgramError } from '../errors';
 import { TokenKind, type Token } from './tokenizer';
-import { isUnit } from './unit';
+import { isUnit } from './units';
 import { parseRawNumber } from './value';
 
 export interface ProgramNode extends NodeBase {
@@ -56,15 +56,17 @@ export class Parser {
 
 	constructor(private readonly tokens: Token[]) {}
 
-	public parse(): ProgramNode {
+	public parse(): { program: ProgramNode; errors: ProgramError[] } {
 		const { statements, errors } = this.parseStatements();
-		console.log(errors);
 
 		return {
-			type: 'Program',
-			body: statements,
-			line: 1,
-			col: 1
+			program: {
+				type: 'Program',
+				body: statements,
+				line: 1,
+				col: 1
+			},
+			errors
 		};
 	}
 
