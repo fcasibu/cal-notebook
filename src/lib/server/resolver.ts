@@ -30,17 +30,16 @@ export async function resolveProgram(p: ProgramNode): Promise<ResolvedLine[]> {
 					const query = statementToQuery(stmt);
 					const cacheKey = getCacheKey(query);
 					let food = await cache.getJson<FdcFood>(cacheKey);
-					console.log(!!food, cacheKey, 'cached!');
 					if (!food) {
 						const response = await queryFood(query);
 						if (!response.ok) return miss;
 						food = response.data;
-						await cache.setJson(cacheKey, JSON.stringify(food));
+						await cache.setJson(cacheKey, food);
 					}
 
 					return resolveLine(stmt, food);
-				} catch {
-					console.error('Error resolving line', stmt);
+				} catch (err) {
+					console.error(`Error resolving line ${stmt.line}`, err);
 					return miss;
 				}
 			})
