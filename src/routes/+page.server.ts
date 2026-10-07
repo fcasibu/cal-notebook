@@ -5,13 +5,7 @@ import { resolveProgram } from '#lib/server/resolver.js';
 
 export const load: PageServerLoad = async () => {
 	const source = `
-50g oats (raw)
-1 banana
-170g greek yogurt
-150g salmon (grilled)
-1 cup white rice (cooked, long-grain)
-100g avocado
-30g peanuts
+50g quaker instant oats @breakfast
 `;
 	const tokenizer = new Tokenizer(source);
 	const tokens = tokenizer.tokenize();
