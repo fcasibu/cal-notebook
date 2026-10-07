@@ -1,24 +1,6 @@
+import { TokenKind, type Token } from '../types';
 import { LexError } from '../errors';
 import { isDigit, isLetter, isNameChar, isWhitespace } from './is';
-
-export enum TokenKind {
-	LPAREN,
-	RPAREN,
-	COMMA,
-	IDENTIFIER,
-	NUMBER,
-	COMMENT,
-	AT,
-	NEWLINE,
-	EOF
-}
-
-export interface Token {
-	line: number;
-	col: number;
-	value: string;
-	kind: TokenKind;
-}
 
 export class Tokenizer {
 	private currentChar: string;

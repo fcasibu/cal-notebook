@@ -1,48 +1,38 @@
 import { queryFood } from './fdc-client';
-import type { EntryStatementNode, ProgramNode, QuantityNode } from '../dsl/parser';
 import { resolveUnit, UNIT_DEFS } from '../dsl/units';
-import {
-	type FdcFood,
-	NutrientNumbers,
-	type FoodPortion,
-	type NutrientConversionFactor
-} from '../fdc/types';
 import { cache, getCacheKey } from './cache';
+import { statementToQuery } from '../dsl/query';
+import {
+	NutrientNumbers,
+	type EntryStatementNode,
+	type FdcFood,
+	type FoodPortion,
+	type NutrientConversionFactor,
+	type QuantityNode,
+	type ResolvedLine
+} from '../types';
 
-// TODO(fcasibu): status to show errors or warnings in the UI
-export interface ResolvedLine {
-	node: EntryStatementNode;
-	nutrients: {
-		calories: number | null;
-		protein: number | null;
-		carbs: number | null;
-		fat: number | null;
-	} | null;
-}
-
-export async function resolveProgram(p: ProgramNode): Promise<ResolvedLine[]> {
+export async function resolveEntries(entries: EntryStatementNode[]): Promise<ResolvedLine[]> {
 	return await Promise.all(
-		p.body
-			.filter((stmt) => stmt.type === 'EntryStatement')
-			.map(async (stmt) => {
-				const miss = { node: stmt, nutrients: null };
-				try {
-					const query = statementToQuery(stmt);
-					const cacheKey = getCacheKey(query);
-					let food = await cache.getJson<FdcFood>(cacheKey);
-					if (!food) {
-						const response = await queryFood(query);
-						if (!response.ok) return miss;
-						food = response.data;
-						await cache.setJson(cacheKey, food);
-					}
-
-					return resolveLine(stmt, food);
-				} catch (err) {
-					console.error(`Error resolving line ${stmt.line}`, err);
-					return miss;
+		entries.map(async (entry) => {
+			const miss = { node: entry, nutrients: null };
+			try {
+				const query = statementToQuery(entry);
+				const cacheKey = getCacheKey(query);
+				let food = await cache.getJson<FdcFood>(cacheKey);
+				if (!food) {
+					const response = await queryFood(query);
+					if (!response.ok) return miss;
+					food = response.data;
+					await cache.setJson(cacheKey, food);
 				}
-			})
+
+				return resolveLine(entry, food);
+			} catch (err) {
+				console.error(`Error resolving line ${entry.line}`, err);
+				return miss;
+			}
+		})
 	);
 }
 
@@ -79,13 +69,6 @@ function resolveLine(stmt: EntryStatementNode, food: FdcFood): ResolvedLine {
 			calories: kcalValue
 		}
 	};
-}
-
-function statementToQuery(stmt: EntryStatementNode): string {
-	const name = stmt.food.normalized;
-	const modifiers = stmt.modifiers.map((mod) => mod.raw).join(' ');
-
-	return `${name} ${modifiers}`.trim();
 }
 
 function resolveGrams(q: QuantityNode, portions: FoodPortion[]): number {

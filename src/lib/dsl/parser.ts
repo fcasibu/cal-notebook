@@ -1,55 +1,16 @@
-import assert, { AssertionError } from 'assert';
 import { ParseError, ParseNumberError, type ProgramError } from '../errors';
-import { TokenKind, type Token } from './tokenizer';
+import { TokenKind, type Token } from '../types';
 import { isUnit } from './units';
 import { parseRawNumber } from './value';
-
-export interface ProgramNode extends NodeBase {
-	type: 'Program';
-	body: StatementNode[];
-}
-
-export type StatementNode = EntryStatementNode | CommentNode;
-
-export interface EntryStatementNode extends NodeBase {
-	type: 'EntryStatement';
-	tag: string | null;
-	quantity: QuantityNode;
-	food: FoodNode;
-	modifiers: ModifierNode[];
-}
-
-export interface CommentNode extends NodeBase {
-	type: 'Comment';
-	text: string;
-}
-
-export interface QuantityNode extends NodeBase {
-	type: 'Quantity';
-	value: number;
-	unit: UnitNode | null;
-}
-
-export interface UnitNode extends NodeBase {
-	type: 'Unit';
-	raw: string;
-}
-
-export interface FoodNode extends NodeBase {
-	type: 'Food';
-	raw: string;
-	normalized: string;
-}
-
-export interface ModifierNode extends NodeBase {
-	type: 'Modifier';
-	raw: string;
-}
-
-export interface NodeBase {
-	line: number;
-	col: number;
-}
+import type {
+	EntryStatementNode,
+	FoodNode,
+	ModifierNode,
+	ProgramNode,
+	QuantityNode,
+	StatementNode,
+	UnitNode
+} from '../types';
 
 export class Parser {
 	private currentIndex: number = 0;
@@ -95,8 +56,6 @@ export class Parser {
 			try {
 				statements.push(this.parseEntryStatement());
 			} catch (error) {
-				if (error instanceof AssertionError) throw error;
-
 				this.synchronize();
 				errors.push(error as ProgramError);
 			}
@@ -309,13 +268,11 @@ export class Parser {
 
 	private current(): Token {
 		const token = this.tokens[this.currentIndex];
-		assert(token !== undefined);
 		return token;
 	}
 
 	private advance(): Token {
 		const token = this.tokens[this.currentIndex++];
-		assert(token !== undefined);
 		return token;
 	}
 

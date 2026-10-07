@@ -1,4 +1,4 @@
-import type { DataType, FdcFood, FdcSearchFood } from './types';
+import type { DataType, FdcFood, FdcSearchFood } from '../types';
 
 type Rankable = Pick<FdcFood | FdcSearchFood, 'description'> & {
 	dataType?: DataType;

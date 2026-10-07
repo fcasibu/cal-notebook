@@ -7,7 +7,7 @@ import {
 	type FdcFood,
 	type FdcSearchResult,
 	type SortBy
-} from '../fdc/types';
+} from '../types';
 
 const BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
 

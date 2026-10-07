@@ -1,16 +1,4 @@
-import type { ResolvedLine } from '../server/resolver';
-
-export interface Total {
-	calories: number;
-	protein: number;
-	carbs: number;
-	fat: number;
-}
-
-export interface Totals {
-	tags: { name: string; total: Total }[];
-	daily: Total;
-}
+import type { ResolvedLine, Total, Totals } from '../types';
 
 export function aggregate(resolvedLines: ResolvedLine[]): Totals {
 	const daily = emptyTotal();
